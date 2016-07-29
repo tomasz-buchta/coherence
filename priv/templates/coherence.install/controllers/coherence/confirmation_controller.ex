@@ -39,7 +39,7 @@ defmodule <%= base %>.Coherence.ConfirmationController do
         else
           changeset = user_schema.changeset(user, %{
             confirmation_token: nil,
-            confirmed_at: Ecto.DateTime.utc,
+            confirmed_at: Timex.now,
             })
           case Config.repo.update(changeset) do
             {:ok, _user} ->

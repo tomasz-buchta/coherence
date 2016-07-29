@@ -27,7 +27,7 @@ defmodule CoherenceTest.ControllerHelpers do
   end
 
   test "unlock!" do
-    user = insert_user(%{locked_at: Ecto.DateTime.utc})
+    user = insert_user(%{locked_at: Timex.now})
     assert User.locked?(user)
     {:ok, user} = Helpers.unlock!(user)
     refute User.locked?(user)

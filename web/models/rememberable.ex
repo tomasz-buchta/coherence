@@ -1,3 +1,4 @@
+require IEx
 defmodule Coherence.Rememberable do
   use Coherence.Web, :model
   use Timex
@@ -21,6 +22,7 @@ defmodule Coherence.Rememberable do
   with no validation performed.
   """
   def changeset(model, params \\ %{}) do
+    # params[:token_created_at]
     model
     |> cast(params, ~w(series_hash token_hash token_created_at user_id))
     |> validate_required(~w(series_hash token_hash token_created_at user_id)a)
@@ -55,7 +57,7 @@ defmodule Coherence.Rememberable do
   end
 
   def delete_expired_tokens do
-    expire_datetime = Timex.shift(DateTime.now, hours: -Config.rememberable_cookie_expire_hours)
+    expire_datetime = Timex.shift(Timex.now, hours: -Config.rememberable_cookie_expire_hours)
     from p in Rememberable, where: p.token_created_at < ^expire_datetime
   end
 
@@ -71,13 +73,21 @@ defmodule Coherence.Rememberable do
     cookie <> " : #{hash series}  #{hash token}"
   end
 
-  defp created_at, do: DateTime.now
+  defp created_at, do: Timex.now
 
   defp gen_token do
     Coherence.ControllerHelpers.random_string 24
   end
   defp gen_series do
     Coherence.ControllerHelpers.random_string 10
+  end
+
+  defp parse_token_created_at(changeset, token_created_at) do
+    case Timex.parse(token_created_at, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}") do
+      {:ok, parsed} -> update_change(changeset, :token_created_at, parsed)
+      {:error, error} -> add_error(changeset, :token_created_at, "Cannot parse")
+    end
+    changeset
   end
 
 end

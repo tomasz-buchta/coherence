@@ -114,7 +114,7 @@ defmodule Coherence.SessionController do
   defp track_login(conn, _, false), do: conn
   defp track_login(conn, user, true) do
     ip = conn.peer |> elem(0) |> inspect
-    now = Ecto.DateTime.utc
+    now = Timex.now
     {last_at, last_ip} = cond do
       is_nil(user.last_sign_in_at) and is_nil(user.current_sign_in_at) ->
         {now, ip}
@@ -127,7 +127,7 @@ defmodule Coherence.SessionController do
     user.__struct__.changeset(user,
       %{
         sign_in_count: user.sign_in_count + 1,
-        current_sign_in_at: Ecto.DateTime.utc,
+        current_sign_in_at: Timex.now,
         current_sign_in_ip: ip,
         last_sign_in_at: last_at,
         last_sign_in_ip: last_ip
@@ -175,7 +175,7 @@ defmodule Coherence.SessionController do
     {conn, flash, params} =
       if attempts >= Config.max_failed_login_attempts do
         new_conn = assign(conn, :locked, true)
-        {new_conn, @flash_locked, %{locked_at: Ecto.DateTime.utc}}
+        {new_conn, @flash_locked, %{locked_at: Timex.now}}
       else
         {conn, @flash_invalid, %{}}
       end

@@ -1,3 +1,4 @@
+require IEx
 defmodule Coherence.ControllerHelpers do
   @moduledoc """
   Common helper functions for Coherence Controllers.
@@ -48,11 +49,8 @@ defmodule Coherence.ControllerHelpers do
       expired?(user.expire_at, minutes: 10)
   """
   def expired?(datetime, opts) do
-    expire_on? = datetime
-    |> Ecto.DateTime.to_erl
-    |> Timex.DateTime.from_erl
-    |> Timex.shift(opts)
-    not Timex.before?(Timex.DateTime.now, expire_on?)
+    expired = Timex.shift(datetime, opts)
+    not Timex.before?(Timex.now, expired)
   end
 
   @doc """
@@ -87,7 +85,7 @@ defmodule Coherence.ControllerHelpers do
       token = random_string 48
       url = router_helpers.confirmation_url(conn, :edit, token)
       Logger.debug "confirmation email url: #{inspect url}"
-      dt = Ecto.DateTime.utc
+      dt = Timex.now
       user_schema.changeset(user,
         %{confirmation_token: token, confirmation_send_at: dt})
       |> Config.repo.update!
@@ -130,7 +128,7 @@ defmodule Coherence.ControllerHelpers do
   can set this data far in the future to do a pseudo permanent lock.
   """
 
-  def lock!(user, locked_at \\ Ecto.DateTime.utc) do
+  def lock!(user, locked_at \\ Timex.now) do
     user_schema = Config.user_schema
     changeset = user_schema.lock user, locked_at
     unless user_schema.locked?(user) do
